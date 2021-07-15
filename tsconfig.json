@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
       "target": "es5",
-      "jsx": "react",
+      "jsx": "react-jsx",
       "noEmitOnError": true,
       "noUnusedLocals": true,
       "removeComments": true,

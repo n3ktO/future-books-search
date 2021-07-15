@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+      "target": "es5",
+      "jsx": "react",
+      "noEmitOnError": true,
+      "noUnusedLocals": true,
+      "removeComments": true,
+      "noImplicitAny": true,
+      "esModuleInterop": true,
+      "experimentalDecorators": true,
+      "useDefineForClassFields": true,
+      "baseUrl": "./"
+  },
+  "exclude": [
+      "node_modules"
+  ],
+  "include": [
+    "src/components",
+    "src/custom.d.ts"
+  ]
+}

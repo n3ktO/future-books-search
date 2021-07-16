@@ -21,6 +21,24 @@ const Header = observer(() => {
 
   return (
         <Button onClick={searchQuery} disabled={!query}>Search</Button>
+          <Selector
+            label="Categories"
+            options={[
+              'all',
+              'art',
+              'biography',
+              'computers',
+              'history',
+              'medical',
+              'poetry'
+            ]}
+            setOption={setCategory}
+          />
+          <Selector
+            label="Sorting by"
+            options={['relevance', 'newest']}
+            setOption={setSorting}
+          />
   );
 });
 

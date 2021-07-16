@@ -1,19 +1,17 @@
 import { FormEvent } from 'react';
 import { observer } from 'mobx-react-lite';
 
-import SearchInput from './SearchInput';
-import CategorySelect from './CategorySelect';
-import SortingSelect from './SortingSelect';
-import SearchButton from './SearchButton';
+import Button from '../Button';
 
 import BooksStore from '../../store/BooksStore';
 import BookInfoStore from '../../store/BookInfoStore';
 
 const Header = observer(() => {
+  const { query, setQuery } = QueryStore;
   const { searchBooks } = BooksStore;
   const { id, removeBook } = BookInfoStore;
 
-  async function search(event: FormEvent) {
+  async function searchQuery(event: FormEvent) {
     event.preventDefault();
     await searchBooks();
     if (id) {
@@ -22,14 +20,7 @@ const Header = observer(() => {
   }
 
   return (
-    <header>
-      <form onSubmit={search}>
-        <SearchInput />
-        <CategorySelect />
-        <SortingSelect />
-        <SearchButton/>
-      </form>
-    </header>
+        <Button onClick={searchQuery} disabled={!query}>Search</Button>
   );
 });
 

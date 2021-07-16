@@ -6,39 +6,15 @@ import SortingStore from './SortingStore';
 
 const PAGE_SIZE = 30;
 
-function getUrl(page: number) {
-  const { query } = QueryStore;
-  const { category } = CategoryStore;
-  const { sorting } = SortingStore;
-  
-  const url = new URL('https://www.googleapis.com/books/v1/volumes');
-  const queryString = `${query}${
-    category !== 'all' ? `+subject:${category}` : ''
-  }`;
-  url.searchParams.set('q', queryString);
-  url.searchParams.set('orderBy', sorting);
-  url.searchParams.set('maxResults', PAGE_SIZE.toString());
-  url.searchParams.set('startIndex', (page * PAGE_SIZE).toString());
-
-  return url;
-}
-
-async function fetchBooks(page: number, abort: AbortController) {
-  const response = await fetch(getUrl(page).toString(), {
-    signal: abort.signal
-  });
-  const data = await response.json();
-  abort = null;
-  return data;
-}
-
 class Books {
   @observable isLoading = false;
-  @observable total = false;
+  @observable total: number = null;
   @observable books: any[] = [];
 
   page = 0;
   abortController: AbortController = null;
+
+  lastQuery: { query: string, category: string, sorting: string } = null;
 
   @action searchBooks = async () => {
     this.abortController?.abort();
@@ -48,29 +24,77 @@ class Books {
       this.isLoading = true;
     });
 
-    this.page = 0;
-    const data = await fetchBooks(this.page, this.abortController);
-    
-    runInAction(() => {
-      this.total = data.totalItems;
-      this.books = data.items;
+    const { query } = QueryStore;
+    const { category } = CategoryStore;
+    const { sorting } = SortingStore;
 
-      this.isLoading = false;
-    });
+    this.page = 0;
+
+    const url = `https://www.googleapis.com/books/v1/volumes` +
+      `?q=${query}${category !== 'all' ? `+subject:${category}` : ''}` +
+      `&orderBy=${sorting}` +
+      `&maxResults=${PAGE_SIZE}` + 
+      `&startIndex=${this.page * PAGE_SIZE}`;
+
+    try {
+      const response = await fetch(url, {
+        signal: this.abortController.signal
+      });
+      const data = await response.json();
+    
+      runInAction(() => {
+        this.total = data.totalItems;
+        this.books = data.items ?? [];
+      });
+
+      this.lastQuery = { query, category, sorting };
+    } catch (e) {
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+
+      this.abortController = null;
+    }
   }
 
   @action loadNextBooks = async () => {
+    this.abortController = new AbortController();
+
     runInAction(() => {
       this.isLoading = true;
     });
 
-    const data = await fetchBooks(++this.page, this.abortController);
+    this.page++;
 
-    runInAction(() => {
-      this.books = [...this.books, ...data.items];
-  
-      this.isLoading = false;
-    });
+    const url = `https://www.googleapis.com/books/v1/volumes` +
+      `?q=${this.lastQuery.query}${
+        this.lastQuery.category !== 'all' ?
+          `+subject:${this.lastQuery.category}` :
+          ''
+      }` +
+      `&orderBy=${this.lastQuery.sorting}` +
+      `&maxResults=${PAGE_SIZE}` +
+      `&startIndex=${this.page * PAGE_SIZE}`;
+
+    try {
+      const response = await fetch(url, {
+        signal: this.abortController.signal
+      });
+      const data = await response.json();
+
+      runInAction(() => {
+        this.books = [...this.books, ...data.items];
+      });
+    } catch (e) {
+      this.page--;
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+
+      this.abortController = null;
+    }
   }
 
   constructor() {

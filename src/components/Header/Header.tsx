@@ -20,6 +20,15 @@ const Header = observer(() => {
   }
 
   return (
+        <TextField
+          onChange={(event: any) => setQuery(event.currentTarget.value)}
+          placeholder="Type search query..."
+          onKeyPress={(event: any) => {
+            if (event.key === 'Enter') {
+              searchQuery(event);
+            }
+          }}
+        />
         <Button onClick={searchQuery} disabled={!query}>Search</Button>
           <Selector
             label="Categories"
